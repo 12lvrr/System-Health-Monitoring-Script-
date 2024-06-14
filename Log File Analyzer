@@ -1,0 +1,57 @@
+#Log File Analyzer
+#Python 3.x
+#re library for regular expressions
+
+import re
+from collections import defaultdict, Counter
+
+# Log file path
+LOG_FILE_PATH = 'access.log'
+
+# Regular expression to parse log lines
+LOG_PATTERN = re.compile(
+    r'(?P<ip>\S+) - - \[(?P<date>.*?)\] "(?P<method>\S+) (?P<url>\S+) \S+" (?P<status>\d+) (?P<size>\S+)')
+
+def parse_log_file(log_file_path):
+    with open(log_file_path, 'r') as file:
+        log_lines = file.readlines()
+
+    logs = []
+    for line in log_lines:
+        match = LOG_PATTERN.match(line)
+        if match:
+            logs.append(match.groupdict())
+    return logs
+
+def analyze_logs(logs):
+    status_counter = Counter()
+    url_counter = Counter()
+    ip_counter = Counter()
+
+    for log in logs:
+        status_counter[log['status']] += 1
+        url_counter[log['url']] += 1
+        ip_counter[log['ip']] += 1
+
+    return status_counter, url_counter, ip_counter
+
+def generate_report(status_counter, url_counter, ip_counter):
+    print("Status Code Summary:")
+    for status, count in status_counter.items():
+        print(f"{status}: {count} times")
+
+    print("\nMost Requested Pages:")
+    for url, count in url_counter.most_common(5):
+        print(f"{url}: {count} times")
+
+    print("\nTop 5 IP Addresses with Most Requests:")
+    for ip, count in ip_counter.most_common(5):
+        print(f"{ip}: {count} times")
+
+def main():
+    logs = parse_log_file(LOG_FILE_PATH)
+    status_counter, url_counter, ip_counter = analyze_logs(logs)
+    generate_report(status_counter, url_counter, ip_counter)
+
+if __name__ == "__main__":
+    main()
